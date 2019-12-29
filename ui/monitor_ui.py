@@ -4,6 +4,7 @@ from monitor import Ui_mainWin
 from visualization import *
 from threading import Thread
 from multiprocessing import Process
+from mat_visual import test_visual,show_visual,draw_individual
 
 class MyMainWindow(QMainWindow,Ui_mainWin):
     def __init__(self,parent=None,rest_url=None,datapath=None):
@@ -26,22 +27,14 @@ class MyMainWindow(QMainWindow,Ui_mainWin):
         # self.show_5.clicked.connect(self.show_factory(4))
         self.connect.clicked.connect(self.update_data)
 
-    def refresh(self):
-        self.update_data()
-
-
     def show_factory(self,d_index):
         index=d_index
         ds=json.loads(self.Data.data)
         #print(ds[index])
-        def test(self):
-            #d=generate_result(1,max_t=2000,record=450,population=5)[0]
-            d=ds[index]
-            #print("d:",d)
-            #d=ds[index]
-            v=Visualization(d,450)
-            t=Thread(target=v.run)
-            t.start()
+        d=ds[index]
+        def test():
+            return draw_individual(d,450)
+        
         return test
 
     def update_data(self):
