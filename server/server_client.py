@@ -100,7 +100,7 @@ def opt(dataSet,population_in,iteration=10000,k=5):
     while t<T:
         iter1+=1
         # if iter1%(k*m)==0:
-        if iter1%50==0:
+        if iter1%25==0:
             iter1=0
             tmp=choose_best(population,k,r=True)
             tmp_result={
@@ -110,7 +110,7 @@ def opt(dataSet,population_in,iteration=10000,k=5):
                 "timecost":time.time()-time_start
             }
             set_mid_result(tmp_result)
-            print(tmp_result)
+            print("mid_result:",tmp_result)
             # resultIndex=-1
             # maxSize=-1
             # for p in population:
@@ -229,18 +229,21 @@ class server(Process):
         msg=gen_msg('final',res)
         self.message_sender.send(msg)
 
-    def msg_handler(self,recv):
+    def msg_handler(self,recv,conn):
         msg=par_msg(recv)
         tp,content=msg['type'],msg['content']
         if tp=='file':
-            self.data_path=content['url']
-            _data_md5=content['md5']
-            # downloading file and check the md5
-            cprint("md5:{}".format(_data_md5),'green')
             re_msg=gen_msg('comment',{'status':"succeed",'msg':"success to download file."})
-            #re_msg=gen_msg('comment',{'status':"failed",'msg':"fail to download file."})
-            # self.send_list.put(re_msg)
-            self.message_sender.send(re_msg)
+            conn.send(re_msg)
+            if self.data_path==None or self.data_path!=content['url']:
+                self.data_path=content['url']
+                _data_md5=content['md5']
+                # downloading file and check the md5
+                cprint("md5:{}".format(_data_md5),'green')
+                self.set_dataSet()
+            else:
+                cprint("File aready exist.",'yellow')
+
         elif tp=='start':
             population=content['population']
             iteration=content['iteration']
@@ -249,16 +252,16 @@ class server(Process):
             cprint("Algorithm started...",'bblue')
             self.t.start()
             re_msg=gen_msg('started',{})
-            self.message_sender.send(re_msg)
+            conn.send(re_msg)
         elif tp=='stop':
             self.t.terminate()
             while self.t.is_alive():
                 time.sleep(0.5)
             msg=gen_msg('final',mid_result)
-            self.message_sender.send(msg)
+            conn.send(msg)
         elif tp=='query':
             msg=gen_msg('result',mid_result)
-            self.message_sender.send(msg)
+            conn.send(msg)
         elif tp=='comment':
             print("Recv Comment:{}".format(cprint(content['msg'],'green',False)))
         else:
@@ -275,7 +278,7 @@ class server(Process):
                 recv=conn.recv(1024)
                 print("{}{}".format(cprint("Recv:",'blue',False),cprint(recv.decode(),'green',False)))
                 # msg=par_msg(recv)
-                self.msg_handler(recv)
+                self.msg_handler(recv,conn)
 
 
 if __name__ == '__main__':

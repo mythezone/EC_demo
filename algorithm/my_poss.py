@@ -1,7 +1,8 @@
-import sys,random,time,json,copy
+import sys,random,time,json,copy,socket
 from re import split
 import numpy as np 
 from math import exp,ceil,log
+from multiprocessing import Process,Queue,Lock,Manager
 
 
 def getData(filepath,lens=None,save_json=False):
@@ -127,10 +128,30 @@ def opt(dataSet,k):
     return p
 
 
+class listener(Process):
+    def __init__(self,addr,master_addr):
+        Process.__init__(self)
+        self.addr=addr
+        self.master_addr=master_addr
+        self.s=socket.socket(socket.AF_INET ,socket.SOCK_STREAM)
+
+
+def message_generator(tp,dct):
+    msg={
+        'type':tp,
+        'content':dct
+    }
+    return json.dumps(msg).encode()
+
+def message_parser(msg):
+    m=json.loads(msg.decode())
+    return m
+
+
 if __name__ == '__main__':
     start=time.time()
     print("My Poss start:")
-    d=getData('data/accident.txt',save_json=True)
+    d=getData('accident.txt',save_json=True)
     #d=get_json_data('accident.json')
     data_time=time.time()
     print("Read data time : ",data_time-start)
