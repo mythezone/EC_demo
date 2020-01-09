@@ -8,36 +8,40 @@
 import os,sys,json,socket,time
 
 
-def gen_msg(tp,content):
+def gen_msg(tp,idin,content):
     copy_content={}
     for key,value in content.items():
         copy_content[key]=value
     msg={
         "type":tp,
+        "id":idin,
         "content":copy_content
     }
     return json.dumps(msg).encode()
 
-def reg_msg(addr):
+def reg_msg(addr,idin):
     ip,port=addr
     content={
         "ip":ip,
         "port":port
     }
-    return gen_msg("register",content)
+    return gen_msg("register",idin,content)
 
-def que_msg(solution,fitness,iteration,timecost):
+def que_msg(solution,fitness,iteration,timecost,idin):
     content={
         "solution":solution,
         "fitness":fitness,
         "iteration":iteration,
         "timecost":timecost
     }
-    return gen_msg("result",content)
+    return gen_msg("result",idin,content)
 
-def qued_msg(dict_result):
-    return gen_msg("result",dict_result)
+def qued_msg(dict_result,idin):
+    return gen_msg("result",idin,dict_result)
 
-def par_msg(msg):
-    d=json.loads(msg.decode())
+def par_msg(msg,ecd=True):
+    if ecd==True:
+        d=json.loads(msg.decode())
+    else:
+        d=json.loads(msg)
     return d
